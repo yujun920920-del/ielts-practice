@@ -46,7 +46,8 @@
     .flashcard.flipped { transform:rotateY(180deg); }
     .card-face { position:absolute; width:100%; height:100%; backface-visibility:hidden; border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; box-shadow:0 4px 16px rgba(0,0,0,0.12); }
     .card-front { background:#1a3c5e; color:white; }
-    .card-front .card-word { font-size:30px; font-weight:700; margin-bottom:6px; }
+    .card-front .card-word { font-size:30px; font-weight:700; margin-bottom:4px; }
+    .card-front .card-phonetic { font-size:14px; opacity:0.75; margin-bottom:4px; letter-spacing:0.5px; }
     .card-front .card-type { font-size:13px; opacity:0.65; }
     .card-back { background:white; transform:rotateY(180deg); }
     .card-back .card-meaning { font-size:20px; font-weight:700; color:#1a3c5e; margin-bottom:8px; }
@@ -147,8 +148,9 @@
         <div class="flashcard" id="flashcard">
           <div class="card-face card-front">
             <div class="card-word" id="card-word"></div>
+            <div class="card-phonetic" id="card-phonetic"></div>
             <div class="card-type" id="card-type"></div>
-            <button onclick="event.stopPropagation(); speakWord(document.getElementById('card-word').textContent)" style="margin-top:14px;background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.5);color:white;border-radius:20px;padding:5px 16px;font-size:14px;cursor:pointer;">🔊 聽發音</button>
+            <button onclick="event.stopPropagation(); fetchAndPlay(document.getElementById('card-word').textContent)" style="margin-top:14px;background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.5);color:white;border-radius:20px;padding:5px 16px;font-size:14px;cursor:pointer;">🔊 聽發音</button>
           </div>
           <div class="card-face card-back">
             <div class="card-meaning" id="card-meaning"></div>
@@ -349,24 +351,25 @@
       }
       const w = cardPool[cardIndex];
       document.getElementById('card-word').textContent = w.word;
+      document.getElementById('card-phonetic').textContent = '';
       document.getElementById('card-type').textContent = w.type;
       document.getElementById('card-meaning').textContent = w.meaning;
       document.getElementById('card-example').textContent = w.example ? '"' + w.example + '"' : '';
       document.getElementById('flashcard').classList.remove('flipped');
       document.getElementById('card-counter').textContent = (cardIndex+1) + ' / ' + cardPool.length;
       document.getElementById('card-progress-fill').style.width = Math.round(((cardIndex+1)/cardPool.length)*100) + '%';
-      speakWord(w.word);
     }
 
     let speechEnabled = true;
     let accentLang = localStorage.getItem('ielts_accent') || 'en-GB';
+    const pronunciationCache = {};
 
     function setAccent(lang, btn) {
       accentLang = lang;
       localStorage.setItem('ielts_accent', lang);
       document.querySelectorAll('.accent-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      if (cardPool[cardIndex]) speakWord(cardPool[cardIndex].word);
+      if (cardPool[cardIndex]) fetchAndPlay(cardPool[cardIndex].word);
     }
 
     function initAccentButtons() {
@@ -380,12 +383,50 @@
       speechEnabled = !speechEnabled;
       document.getElementById('speech-toggle').textContent = '🔊 朗讀：' + (speechEnabled ? '開' : '關');
     }
+
     function speakWord(word) {
-      if (!speechEnabled || !window.speechSynthesis) return;
+      if (!window.speechSynthesis) return;
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(word);
       u.lang = accentLang; u.rate = 0.9;
       window.speechSynthesis.speak(u);
+    }
+
+    async function fetchAndPlay(word) {
+      if (!speechEnabled) return;
+      const cacheKey = word + '|' + accentLang;
+      if (pronunciationCache[cacheKey]) {
+        playAudio(pronunciationCache[cacheKey].audio, pronunciationCache[cacheKey].phonetic, word);
+        return;
+      }
+      try {
+        const res = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word));
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const entry = data[0];
+        const phonetics = entry.phonetics || [];
+        const preferUK = accentLang !== 'en-US';
+        const preferred = preferUK ? 'uk' : 'us';
+        const fallback  = preferUK ? 'us' : 'uk';
+        const pick = (k) => phonetics.find(p => p.audio && p.audio.includes(k));
+        const chosen = pick(preferred) || pick(fallback) || phonetics.find(p => p.audio) || {};
+        const phonetic = (phonetics.find(p => p.text) || {}).text || entry.phonetic || '';
+        pronunciationCache[cacheKey] = { audio: chosen.audio || '', phonetic };
+        playAudio(chosen.audio || '', phonetic, word);
+      } catch(e) {
+        speakWord(word);
+      }
+    }
+
+    function playAudio(url, phonetic, fallbackWord) {
+      const el = document.getElementById('card-phonetic');
+      if (el && phonetic) el.textContent = phonetic;
+      if (url) {
+        const a = new Audio(url);
+        a.play().catch(() => speakWord(fallbackWord));
+      } else {
+        speakWord(fallbackWord);
+      }
     }
     function flipCard() {
       document.getElementById('flashcard').classList.toggle('flipped');
