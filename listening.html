@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Listening — IELTS Practice</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#1a3c5e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="IELTS" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .tts-player {
+      background: #f5f8fc;
+      border-radius: 10px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .tts-controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .tts-status {
+      font-size: 13px;
+      color: #888;
+      min-height: 20px;
+    }
+    .progress-bar-wrap {
+      width: 100%;
+      max-width: 480px;
+      background: #dce6f0;
+      border-radius: 8px;
+      height: 8px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: #1a3c5e;
+      border-radius: 8px;
+      width: 0%;
+      transition: width 0.4s;
+    }
+    .speed-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #555;
+    }
+    .speed-wrap select {
+      padding: 4px 8px;
+      border: 1px solid #ccd8e8;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+    .btn-play  { background: #1a3c5e; color: white; }
+    .btn-play:hover  { background: #14304d; }
+    .btn-pause { background: #e0e8f4; color: #1a3c5e; }
+    .btn-pause:hover { background: #c8d8ee; }
+    .btn-stop  { background: #fde8e8; color: #b52020; }
+    .btn-stop:hover  { background: #f8cccc; }
+  </style>
+
+  <script>
+    // Dark mode
+    (function(){
+      const dark = localStorage.getItem('ielts_dark') === '1';
+      if (dark) document.body.classList.add('dark');
+    })();
+    function toggleDark() {
+      document.body.classList.toggle('dark');
+      localStorage.setItem('ielts_dark', document.body.classList.contains('dark') ? '1' : '0');
+      document.getElementById('dark-btn').textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+    }
+  </script>
+</head>
+<body>
+  <header>
+    <h1>IELTS Practice</h1>
+    <a href="index.html">← 返回首頁</a>
+  </header>
+
+  <div class="container">
+    <div class="page-title">Listening Practice</div>
+    <div class="page-subtitle">點擊「播放」讓瀏覽器朗讀對話，仔細聆聽後回答問題。可重複播放。</div>
+
+    <!-- TTS Player -->
+    <div class="card">
+      <h2>Audio — Section 1 &nbsp;<span style="font-size:12px;color:#888;font-weight:400;">（瀏覽器語音朗讀）</span></h2>
+      <div class="tts-player">
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="tts-controls">
+          <button class="btn btn-play" onclick="startSpeech()">▶ 播放</button>
+          <button class="btn btn-pause" onclick="pauseSpeech()">⏸ 暫停 / 繼續</button>
+          <button class="btn btn-stop" onclick="stopSpeech()">⏹ 停止</button>
+        </div>
+        <div class="speed-wrap">
+          語速：
+          <select id="speed-select">
+            <option value="0.75">慢速 ×0.75</option>
+            <option value="0.9" selected>正常 ×0.9</option>
+            <option value="1.1">快速 ×1.1</option>
+          </select>
+        </div>
+        <div class="tts-status" id="tts-status">準備就緒，點擊播放開始聆聽</div>
+      </div>
+    </div>
+
+    <!-- Questions -->
+    <div class="card questions-section">
+      <h2>Questions 1–6</h2>
+
+      <div class="question-block">
+        <p>1. The man wants to book a swimming lesson for his daughter. How old is she?</p>
+        <div class="options">
+          <label><input type="radio" name="q1" value="A" /> A. Six</label>
+          <label><input type="radio" name="q1" value="B" /> B. Seven</label>
+          <label><input type="radio" name="q1" value="C" /> C. Eight</label>
+          <label><input type="radio" name="q1" value="D" /> D. Ten</label>
+        </div>
+      </div>
+
+      <div class="question-block">
+        <p>2. Which lesson time does the man choose?</p>
+        <div class="options">
+          <label><input type="radio" name="q2" value="A" /> A. Tuesday at 4 PM</label>
+          <label><input type="radio" name="q2" value="B" /> B. Thursday at 4 PM</label>
+          <label><input type="radio" name="q2" value="C" /> C. Saturday at 10 AM</label>
+          <label><input type="radio" name="q2" value="D" /> D. Sunday at 9 AM</label>
+        </div>
+      </div>
+
+      <div class="question-block">
+        <p>3. How long is each lesson?</p>
+        <div class="options">
+          <label><input type="radio" name="q3" value="A" /> A. 30 minutes</label>
+          <label><input type="radio" name="q3" value="B" /> B. 45 minutes</label>
+          <label><input type="radio" name="q3" value="C" /> C. 60 minutes</label>
+          <label><input type="radio" name="q3" value="D" /> D. 90 minutes</label>
+        </div>
+      </div>
+
+      <div class="question-block">
+        <p>4. How much does a block of 8 lessons cost? £ ________</p>
+        <input class="fill-input" type="text" id="q4-input" placeholder="e.g. 85" />
+      </div>
+
+      <div class="question-block">
+        <p>5. What is the girl's full name? ________</p>
+        <input class="fill-input" type="text" id="q5-input" placeholder="First and last name" />
+      </div>
+
+      <div class="question-block">
+        <p>6. What is the contact number? ________</p>
+        <input class="fill-input" type="text" id="q6-input" placeholder="Phone number" />
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="submitAnswers()">提交答案</button>
+        <button class="btn btn-secondary" onclick="resetAll()">重新作答</button>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div id="result-box">
+      <div class="score-banner">
+        <div class="score-number" id="score-display"></div>
+        <div class="score-label">答對題數 / 共 6 題</div>
+      </div>
+      <div id="answer-list"></div>
+    </div>
+  </div>
+
+  <script>
+    // Dialogue split into sentences for progress tracking
+    const lines = [
+      "Good morning, City Sports Centre. How can I help you?",
+      "Hello. I'd like to book a swimming lesson for my daughter. She's eight years old.",
+      "Of course. We have beginner classes every Tuesday and Thursday at 4 PM, and Saturday morning at 10 AM. Each lesson is 45 minutes long.",
+      "Saturday morning sounds good. How much does it cost?",
+      "It's 12 pounds per lesson, or you can buy a block of 8 lessons for 85 pounds, which saves you some money.",
+      "I'll go with the block booking then. What does she need to bring?",
+      "Just a swimsuit, a towel, and goggles if she has them — though we do have spare goggles at the front desk. Oh, and could I take her name?",
+      "Sure. Her name is Sophie — S, O, P, H, I, E — Parker.",
+      "Perfect. And your contact number?",
+      "It's 0, 7, 7, 4, 5, 8, 8, 2, 3, 1, 0.",
+      "Great, Sophie Parker is booked for Saturday 10 AM, starting this weekend. We'll send a confirmation to your email.",
+    ];
+
+    let currentIndex = 0;
+    let isSpeaking = false;
+
+    const statusEl = document.getElementById('tts-status');
+    const progressBar = document.getElementById('progress-bar');
+
+    function speakLine(index) {
+      if (index >= lines.length) {
+        statusEl.textContent = '播放完畢';
+        progressBar.style.width = '100%';
+        isSpeaking = false;
+        return;
+      }
+
+      const rate = parseFloat(document.getElementById('speed-select').value);
+      const utter = new SpeechSynthesisUtterance(lines[index]);
+      utter.lang = 'en-GB';
+      utter.rate = rate;
+
+      utter.onstart = () => {
+        statusEl.textContent = `正在播放第 ${index + 1} / ${lines.length} 句...`;
+        progressBar.style.width = `${Math.round(((index) / lines.length) * 100)}%`;
+      };
+
+      utter.onend = () => {
+        currentIndex = index + 1;
+        progressBar.style.width = `${Math.round(((index + 1) / lines.length) * 100)}%`;
+        if (isSpeaking) speakLine(currentIndex);
+      };
+
+      utter.onerror = () => {
+        statusEl.textContent = '朗讀發生錯誤，請重試';
+        isSpeaking = false;
+      };
+
+      window.speechSynthesis.speak(utter);
+    }
+
+    function startSpeech() {
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+        isSpeaking = true;
+        statusEl.textContent = '繼續播放...';
+        return;
+      }
+      window.speechSynthesis.cancel();
+      currentIndex = 0;
+      isSpeaking = true;
+      progressBar.style.width = '0%';
+      speakLine(currentIndex);
+    }
+
+    function pauseSpeech() {
+      if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+        window.speechSynthesis.pause();
+        isSpeaking = false;
+        statusEl.textContent = '已暫停，點擊「播放」繼續';
+      } else if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+        isSpeaking = true;
+        statusEl.textContent = '繼續播放...';
+      }
+    }
+
+    function stopSpeech() {
+      window.speechSynthesis.cancel();
+      isSpeaking = false;
+      currentIndex = 0;
+      progressBar.style.width = '0%';
+      statusEl.textContent = '已停止，點擊播放重新開始';
+    }
+
+    // Answer checking
+    const answers = {
+      q1: { correct: 'C', type: 'radio', label: 'Eight' },
+      q2: { correct: 'C', type: 'radio', label: 'Saturday at 10 AM' },
+      q3: { correct: 'B', type: 'radio', label: '45 minutes' },
+      q4: { correct: ['85', '£85'], type: 'fill', label: '85' },
+      q5: { correct: ['sophie parker'], type: 'fill', label: 'Sophie Parker' },
+      q6: { correct: ['07745 882 310', '07745882310'], type: 'fill', label: '07745 882 310' },
+    };
+
+    const questions = [
+      'How old is the daughter?',
+      'Which lesson time does the man choose?',
+      'How long is each lesson?',
+      'How much does a block of 8 lessons cost?',
+      "What is the girl's full name?",
+      'What is the contact number?',
+    ];
+
+    function submitAnswers() {
+      stopSpeech();
+      let score = 0;
+      const resultList = document.getElementById('answer-list');
+      resultList.innerHTML = '';
+
+      Object.keys(answers).forEach((key, i) => {
+        const info = answers[key];
+        let userAnswer = '';
+        let isCorrect = false;
+
+        if (info.type === 'radio') {
+          const selected = document.querySelector(`input[name="${key}"]:checked`);
+          userAnswer = selected ? selected.value : '(未作答)';
+          isCorrect = userAnswer === info.correct;
+        } else {
+          userAnswer = document.getElementById(`${key}-input`).value.trim().toLowerCase();
+          isCorrect = info.correct.some(c => userAnswer === c.toLowerCase());
+        }
+
+        if (isCorrect) score++;
+
+        const item = document.createElement('div');
+        item.className = 'answer-item';
+        item.innerHTML = `
+          <span class="tag ${isCorrect ? 'tag-correct' : 'tag-wrong'}">${isCorrect ? '正確' : '錯誤'}</span>
+          <div class="answer-detail">
+            <strong>Q${i + 1}.</strong> ${questions[i]}<br/>
+            你的答案：${userAnswer || '(未作答)'}
+            ${!isCorrect ? `<br/><span class="correct-ans">正確答案：${info.label}</span>` : ''}
+          </div>
+        `;
+        resultList.appendChild(item);
+      });
+
+      document.getElementById('score-display').textContent = `${score} / 6`;
+      const box = document.getElementById('result-box');
+      box.style.display = 'block';
+      box.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetAll() {
+      stopSpeech();
+      document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+      document.querySelectorAll('.fill-input').forEach(i => i.value = '');
+      document.getElementById('result-box').style.display = 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+  </script>
+</body>
+</html>

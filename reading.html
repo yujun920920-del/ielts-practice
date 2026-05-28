@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reading — IELTS Practice</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#1a3c5e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="IELTS" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .passage-selector { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:24px; }
+    .passage-btn { padding:9px 18px; border-radius:8px; border:2px solid #c8d8ee; background:white; color:#1a3c5e; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.15s; }
+    .passage-btn.active { background:#1a3c5e; color:white; border-color:#1a3c5e; }
+  </style>
+
+  <script>
+    // Dark mode
+    (function(){
+      const dark = localStorage.getItem('ielts_dark') === '1';
+      if (dark) document.body.classList.add('dark');
+    })();
+    function toggleDark() {
+      document.body.classList.toggle('dark');
+      localStorage.setItem('ielts_dark', document.body.classList.contains('dark') ? '1' : '0');
+      document.getElementById('dark-btn').textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+    }
+  </script>
+</head>
+<body>
+  <header>
+    <h1>IELTS Practice</h1>
+    <a href="index.html">← 返回首頁</a>
+  </header>
+  <div class="container">
+    <div class="page-title">Reading Practice</div>
+    <div class="page-subtitle">選擇題組，閱讀文章後回答問題。完成後點擊「提交答案」。</div>
+
+    <div class="passage-selector">
+      <button class="passage-btn active" onclick="loadPassage(0,this)">Passage 1 — Coffee</button>
+      <button class="passage-btn" onclick="loadPassage(1,this)">Passage 2 — Coral Reefs</button>
+      <button class="passage-btn" onclick="loadPassage(2,this)">Passage 3 — Remote Work</button>
+    </div>
+
+    <div class="card">
+      <h2 id="passage-title"></h2>
+      <div class="passage" id="passage-text"></div>
+    </div>
+
+    <div class="card questions-section">
+      <h2 id="questions-heading">Questions 1–6</h2>
+      <div id="questions-container"></div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="submitAnswers()">提交答案</button>
+        <button class="btn btn-secondary" onclick="resetAll()">重新作答</button>
+      </div>
+    </div>
+
+    <div id="result-box">
+      <div class="score-banner">
+        <div class="score-number" id="score-display"></div>
+        <div class="score-label" id="score-label"></div>
+      </div>
+      <div id="answer-list"></div>
+    </div>
+  </div>
+
+  <script>
+    const passages = [
+      {
+        title: "Passage 1 — The History of Coffee",
+        text: `Coffee is one of the world's most popular beverages, consumed by millions of people every day. Its origins can be traced back to the ancient coffee forests of Ethiopia, where, according to legend, a goat herder named Kaldi first discovered the potential of these beloved beans around 850 AD. Kaldi noticed that his goats became unusually energetic after eating berries from a certain tree and did not sleep at night. He brought the berries to a local monastery, where a monk made a drink from them and found it kept him alert during long evening prayers.
+
+From Ethiopia, coffee cultivation and trade spread to the Arabian Peninsula. By the 15th century, coffee was being grown in the Yemeni district of Arabia, and by the 16th century it was known in Persia, Egypt, Syria, and Turkey. Coffee was not only enjoyed in homes but also in the many public coffee houses known as qahveh khaneh, which began to appear in cities across the Near East. These coffee houses quickly became important centres of social activity and communication.
+
+Coffee was brought to Europe by travellers returning from the Near East in the 17th century. Initially, some opposition arose — some called it the "bitter invention of Satan." However, when Pope Clement VIII tried the drink in 1600, he found it so satisfying that he approved it. Coffee houses spread rapidly across Europe. The London Stock Exchange and Lloyd's of London insurance market both had their origins in coffee houses.
+
+Today, Brazil is the world's largest producer of coffee, accounting for about one-third of all global output. Scientists have also confirmed numerous health benefits of moderate coffee consumption, including reduced risk of type 2 diabetes and certain liver conditions.`,
+        questions: [
+          { type:"radio", text:"1. Who first discovered the effects of coffee berries?", name:"q1", options:["A. A local monk","B. A goat herder named Kaldi","C. An Arabian merchant","D. Pope Clement VIII"], answer:"B", answerLabel:"A goat herder named Kaldi" },
+          { type:"radio", text:"2. In which century did coffee reach Turkey?", name:"q2", options:["A. 15th century","B. 16th century","C. 17th century","D. 18th century"], answer:"B", answerLabel:"16th century" },
+          { type:"radio", text:"3. What were qahveh khaneh?", name:"q3", options:["A. Ethiopian coffee farms","B. Monasteries","C. Public coffee houses in the Near East","D. European stock exchanges"], answer:"C", answerLabel:"Public coffee houses in the Near East" },
+          { type:"radio", text:"4. Why did some Europeans initially oppose coffee?", name:"q4", options:["A. It was too expensive","B. They called it the 'bitter invention of Satan'","C. The Pope had banned it","D. It caused health problems"], answer:"B", answerLabel:"They called it the 'bitter invention of Satan'" },
+          { type:"fill", text:"5. Both the London Stock Exchange and Lloyd's of London originated in ________.", id:"q5", answer:["coffee houses","coffee house"], answerLabel:"coffee houses" },
+          { type:"fill", text:"6. Brazil accounts for about ________ of global coffee output.", id:"q6", answer:["one-third","1/3","one third"], answerLabel:"one-third" },
+        ]
+      },
+      {
+        title: "Passage 2 — Coral Reefs Under Threat",
+        text: `Coral reefs are among the most diverse ecosystems on Earth, supporting approximately 25% of all marine species despite covering less than 1% of the ocean floor. Often called the "rainforests of the sea," these underwater structures are built by tiny marine animals called coral polyps, which secrete calcium carbonate to form their hard skeletons.
+
+The greatest threat facing coral reefs today is climate change. As ocean temperatures rise due to global warming, corals expel the colourful algae living in their tissues — a process known as coral bleaching. Without these algae, corals turn white and become vulnerable to disease. If temperatures remain elevated for extended periods, the corals die. Mass bleaching events have increased dramatically in frequency and severity since the 1980s.
+
+Ocean acidification poses an additional threat. As the ocean absorbs excess carbon dioxide from the atmosphere, seawater becomes more acidic. This acidification reduces the availability of calcium carbonate, making it harder for corals to build and maintain their skeletons.
+
+Human activities also directly damage reef ecosystems. Overfishing disrupts the delicate balance of reef communities, while coastal development, pollution, and agricultural runoff introduce harmful nutrients and sediments into reef waters. Certain destructive fishing practices, such as dynamite fishing, cause immediate physical destruction.
+
+Conservation efforts are underway globally. Marine protected areas restrict damaging activities in critical reef zones, while coral gardening programmes cultivate and transplant coral fragments to restore damaged reefs. Scientists are also researching heat-resistant coral species that may be better adapted to survive warming oceans.`,
+        questions: [
+          { type:"radio", text:"1. What percentage of marine species do coral reefs support?", name:"q1", options:["A. 1%","B. 10%","C. 25%","D. 50%"], answer:"C", answerLabel:"25%" },
+          { type:"radio", text:"2. What is coral bleaching?", name:"q2", options:["A. Corals turning colourful due to algae","B. Corals expelling algae due to rising temperatures","C. Corals absorbing excess carbon dioxide","D. Corals being damaged by fishing"], answer:"B", answerLabel:"Corals expelling algae due to rising temperatures" },
+          { type:"radio", text:"3. What does ocean acidification reduce?", name:"q3", options:["A. Ocean temperature","B. Marine biodiversity","C. Availability of calcium carbonate","D. Amount of carbon dioxide in the atmosphere"], answer:"C", answerLabel:"Availability of calcium carbonate" },
+          { type:"radio", text:"4. Which fishing practice causes immediate physical destruction to reefs?", name:"q4", options:["A. Overfishing","B. Net fishing","C. Dynamite fishing","D. Coral gardening"], answer:"C", answerLabel:"Dynamite fishing" },
+          { type:"fill", text:"5. Coral reefs are sometimes called the '________ of the sea'.", id:"q5", answer:["rainforests","rainforest"], answerLabel:"rainforests" },
+          { type:"fill", text:"6. ________ programmes cultivate and transplant coral fragments to restore damaged reefs.", id:"q6", answer:["coral gardening","coral-gardening"], answerLabel:"Coral gardening" },
+        ]
+      },
+      {
+        title: "Passage 3 — The Rise of Remote Work",
+        text: `The concept of remote work — performing one's job outside a traditional office environment — has existed for decades, but it was dramatically accelerated by the global COVID-19 pandemic. When lockdowns forced offices to close in early 2020, millions of workers worldwide transitioned to working from home almost overnight. What began as an emergency measure has since evolved into a fundamental shift in how many organisations operate.
+
+Research conducted during and after the pandemic has produced mixed findings on remote work productivity. Some studies suggest that workers are more productive at home, free from office distractions and lengthy commutes. Others indicate that collaboration and creativity suffer when teams are geographically dispersed. The reality appears to depend heavily on the nature of the work, the individual, and the quality of remote working tools available.
+
+The environmental impact of remote work has attracted growing attention. Reduced commuting has led to lower carbon emissions in many cities. However, this benefit is partially offset by increased domestic energy consumption as workers heat, cool, and light their homes throughout the working day.
+
+The shift to remote work has also had significant economic consequences. Demand for office space has declined in many cities, with some companies downsizing or abandoning expensive city-centre leases. Conversely, suburban and rural areas have experienced population growth as workers seek larger homes and lower costs of living, no longer constrained by proximity to urban offices.
+
+Looking ahead, many organisations are adopting hybrid working models, which blend remote and in-office work. This approach aims to capture the flexibility benefits of remote work while preserving the collaborative advantages of face-to-face interaction.`,
+        questions: [
+          { type:"radio", text:"1. What dramatically accelerated the adoption of remote work?", name:"q1", options:["A. Advances in technology","B. The COVID-19 pandemic","C. Rising office rental costs","D. Employee demand"], answer:"B", answerLabel:"The COVID-19 pandemic" },
+          { type:"radio", text:"2. According to the passage, what does research suggest about remote work productivity?", name:"q2", options:["A. Workers are always more productive at home","B. Productivity always decreases when working remotely","C. Findings are mixed and depend on various factors","D. Remote work has no effect on productivity"], answer:"C", answerLabel:"Findings are mixed and depend on various factors" },
+          { type:"radio", text:"3. How has remote work affected carbon emissions?", name:"q3", options:["A. Emissions have increased significantly","B. Reduced commuting has lowered emissions, but domestic energy use has risen","C. There has been no impact on emissions","D. Remote work has fully eliminated transport emissions"], answer:"B", answerLabel:"Reduced commuting has lowered emissions, but domestic energy use has risen" },
+          { type:"radio", text:"4. What has happened to suburban and rural areas due to remote work?", name:"q4", options:["A. They have lost population","B. Office space demand has increased there","C. They have experienced population growth","D. They have become more expensive"], answer:"C", answerLabel:"They have experienced population growth" },
+          { type:"fill", text:"5. Many organisations are now adopting ________ working models that blend remote and in-office work.", id:"q5", answer:["hybrid"], answerLabel:"hybrid" },
+          { type:"fill", text:"6. Remote work reduced the need for workers to live close to ________ offices.", id:"q6", answer:["urban","city","city-centre"], answerLabel:"urban" },
+        ]
+      }
+    ];
+
+    let currentPassageIndex = 0;
+
+    function loadPassage(index, btn) {
+      currentPassageIndex = index;
+      document.querySelectorAll('.passage-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const p = passages[index];
+      document.getElementById('passage-title').textContent = p.title;
+      document.getElementById('passage-text').innerHTML = p.text.split('\n\n').map(para => '<p>' + para + '</p><br/>').join('');
+      document.getElementById('questions-heading').textContent = 'Questions 1–' + p.questions.length;
+      renderQuestions(p.questions);
+      document.getElementById('result-box').style.display = 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderQuestions(qs) {
+      document.getElementById('questions-container').innerHTML = qs.map(q => {
+        if (q.type === 'radio') {
+          return '<div class="question-block"><p>' + q.text + '</p><div class="options">' +
+            q.options.map(opt => '<label><input type="radio" name="' + q.name + '" value="' + opt[0] + '" /> ' + opt + '</label>').join('') +
+            '</div></div>';
+        } else {
+          return '<div class="question-block"><p>' + q.text + '</p>' +
+            '<input class="fill-input" type="text" id="' + q.id + '" placeholder="Your answer" /></div>';
+        }
+      }).join('');
+    }
+
+    function submitAnswers() {
+      const p = passages[currentPassageIndex];
+      let score = 0;
+      const resultList = document.getElementById('answer-list');
+      resultList.innerHTML = '';
+
+      p.questions.forEach((q, i) => {
+        let userAnswer = '', isCorrect = false;
+        if (q.type === 'radio') {
+          const sel = document.querySelector('input[name="' + q.name + '"]:checked');
+          userAnswer = sel ? sel.value : '(未作答)';
+          isCorrect = userAnswer === q.answer;
+        } else {
+          userAnswer = (document.getElementById(q.id)?.value || '').trim().toLowerCase();
+          isCorrect = q.answer.some(a => userAnswer === a.toLowerCase());
+        }
+        if (isCorrect) score++;
+        const item = document.createElement('div');
+        item.className = 'answer-item';
+        item.innerHTML = '<span class="tag ' + (isCorrect ? 'tag-correct' : 'tag-wrong') + '">' + (isCorrect ? '正確' : '錯誤') + '</span>' +
+          '<div class="answer-detail"><strong>Q' + (i+1) + '.</strong> ' + q.text.replace(' ________','').replace(/\d+\.\s/,'') + '<br/>你的答案：' + (userAnswer || '(未作答)') +
+          (!isCorrect ? '<br/><span class="correct-ans">正確答案：' + q.answerLabel + '</span>' : '') + '</div>';
+        resultList.appendChild(item);
+      });
+
+      document.getElementById('score-display').textContent = score + ' / ' + p.questions.length;
+      document.getElementById('score-label').textContent = '答對題數 / 共 ' + p.questions.length + ' 題';
+      const box = document.getElementById('result-box');
+      box.style.display = 'block';
+      box.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetAll() {
+      document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+      document.querySelectorAll('.fill-input').forEach(i => i.value = '');
+      document.getElementById('result-box').style.display = 'none';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Load first passage on start
+    loadPassage(0, document.querySelector('.passage-btn.active'));
+
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+  </script>
+</body>
+</html>

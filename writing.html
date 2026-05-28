@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Writing — IELTS Practice</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#1a3c5e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="IELTS" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Task selector */
+    .task-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .task-tab {
+      padding: 10px 24px;
+      border-radius: 8px;
+      border: 2px solid #c8d8ee;
+      background: white;
+      color: #1a3c5e;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .task-tab.active {
+      background: #1a3c5e;
+      color: white;
+      border-color: #1a3c5e;
+    }
+
+    /* Prompt box */
+    .prompt-box {
+      background: #f5f8fc;
+      border-left: 4px solid #1a3c5e;
+      border-radius: 0 8px 8px 0;
+      padding: 18px 20px;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    .prompt-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #1a3c5e;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .prompt-note {
+      font-size: 13px;
+      color: #888;
+      margin-top: 10px;
+    }
+
+    /* Writing area */
+    .write-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .write-meta-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .word-count {
+      font-size: 14px;
+      color: #555;
+    }
+    .word-count span {
+      font-weight: 700;
+      color: #1a3c5e;
+    }
+    .word-count.warn span { color: #c0392b; }
+    .word-count.ok span { color: #1a6630; }
+
+    .timer-display {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a3c5e;
+      font-variant-numeric: tabular-nums;
+    }
+    .timer-display.warn { color: #c0392b; }
+
+    .timer-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    textarea#essay {
+      width: 100%;
+      min-height: 280px;
+      padding: 16px;
+      border: 1.5px solid #ccd8e8;
+      border-radius: 8px;
+      font-size: 15px;
+      line-height: 1.8;
+      resize: vertical;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    textarea#essay:focus {
+      border-color: #1a3c5e;
+    }
+
+    /* Sample answer */
+    #sample-section {
+      display: none;
+    }
+    .sample-box {
+      background: #f9fbff;
+      border: 1px solid #d0e4f7;
+      border-radius: 8px;
+      padding: 20px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #333;
+      white-space: pre-wrap;
+    }
+    .checklist {
+      margin-top: 16px;
+    }
+    .checklist h3 {
+      font-size: 15px;
+      color: #1a3c5e;
+      margin-bottom: 10px;
+    }
+    .checklist label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 0;
+      font-size: 14px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+    }
+    .checklist label:last-child { border-bottom: none; }
+    .checklist input[type="checkbox"] {
+      accent-color: #1a3c5e;
+      width: 16px;
+      height: 16px;
+    }
+    .self-score {
+      margin-top: 20px;
+      padding: 16px;
+      background: #f0f6ff;
+      border-radius: 8px;
+    }
+    .self-score h3 {
+      font-size: 15px;
+      color: #1a3c5e;
+      margin-bottom: 10px;
+    }
+    .band-select {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .band-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1.5px solid #c8d8ee;
+      background: white;
+      color: #555;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .band-btn.selected {
+      background: #1a3c5e;
+      color: white;
+      border-color: #1a3c5e;
+    }
+  </style>
+
+  <script>
+    // Dark mode
+    (function(){
+      const dark = localStorage.getItem('ielts_dark') === '1';
+      if (dark) document.body.classList.add('dark');
+    })();
+    function toggleDark() {
+      document.body.classList.toggle('dark');
+      localStorage.setItem('ielts_dark', document.body.classList.contains('dark') ? '1' : '0');
+      document.getElementById('dark-btn').textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+    }
+  </script>
+</head>
+<body>
+  <header>
+    <h1>IELTS Practice</h1>
+    <a href="index.html">← 返回首頁</a>
+  </header>
+
+  <div class="container">
+    <div class="page-title">Writing Practice</div>
+    <div class="page-subtitle">選擇題型，在時間內完成作文，完成後對照範文自我評估。</div>
+
+    <!-- Task selector -->
+    <div class="task-tabs">
+      <button class="task-tab active" onclick="switchTask(1)">Task 1　圖表描述</button>
+      <button class="task-tab" onclick="switchTask(2)">Task 2　議論文</button>
+    </div>
+
+    <!-- Prompt -->
+    <div class="card" id="prompt-card">
+      <div class="prompt-label">Writing Prompt</div>
+
+      <div id="prompt-task1">
+        <div class="prompt-box">
+          The chart below shows the percentage of households in owned and rented accommodation in England and Wales between 1918 and 2011.<br /><br />
+          <strong>Summarise the information by selecting and reporting the main features, and make comparisons where relevant.</strong>
+        </div>
+        <div class="prompt-note">Task 1：至少 150 字　｜　建議時間 20 分鐘</div>
+        <!-- Simple chart description image placeholder -->
+        <div style="margin-top:14px; background:#e8f0fb; border-radius:8px; padding:16px; font-size:13px; color:#555; line-height:1.6;">
+          <strong>圖表數據（文字版）：</strong><br />
+          1918：owned 23%，rented 77%<br />
+          1939：owned 32%，rented 68%<br />
+          1953：owned 38%，rented 62%<br />
+          1961：owned 43%，rented 57%<br />
+          1971：owned 52%，rented 48%<br />
+          1981：owned 58%，rented 42%<br />
+          1991：owned 67%，rented 33%<br />
+          2001：owned 69%，rented 31%<br />
+          2011：owned 64%，rented 36%
+        </div>
+      </div>
+
+      <div id="prompt-task2" style="display:none;">
+        <div class="prompt-box">
+          Some people think that parents should teach children how to be good members of society. Others, however, believe that school is the place to learn this.<br /><br />
+          <strong>Discuss both these views and give your own opinion.</strong>
+        </div>
+        <div class="prompt-note">Task 2：至少 250 字　｜　建議時間 40 分鐘</div>
+      </div>
+    </div>
+
+    <!-- Writing area -->
+    <div class="card">
+      <div class="write-meta">
+        <div class="write-meta-left">
+          <div class="word-count" id="word-count-display">
+            字數：<span id="wc">0</span> / <span id="wc-min">150</span>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="timer-display" id="timer-display">20:00</div>
+          <div class="timer-controls">
+            <button class="btn btn-secondary" style="padding:8px 16px; font-size:13px;" onclick="toggleTimer()">開始計時</button>
+            <button class="btn btn-secondary" style="padding:8px 16px; font-size:13px;" onclick="resetTimer()">重置</button>
+          </div>
+        </div>
+      </div>
+      <textarea id="essay" placeholder="在這裡開始寫作..."></textarea>
+      <div class="actions" style="margin-top:16px;">
+        <button class="btn btn-primary" onclick="submitEssay()">完成作答 &amp; 看範文</button>
+        <button class="btn btn-secondary" onclick="resetEssay()">重新作答</button>
+      </div>
+    </div>
+
+    <!-- Sample answer + checklist -->
+    <div id="sample-section">
+      <div class="card">
+        <h2>範文參考</h2>
+        <div class="sample-box" id="sample-text"></div>
+      </div>
+
+      <div class="card">
+        <div class="checklist">
+          <h3>自我檢查清單</h3>
+          <div id="checklist-items"></div>
+        </div>
+        <div class="self-score">
+          <h3>自評 Band Score</h3>
+          <div class="band-select" id="band-select">
+            <button class="band-btn" onclick="selectBand(this, 4)">Band 4</button>
+            <button class="band-btn" onclick="selectBand(this, 5)">Band 5</button>
+            <button class="band-btn" onclick="selectBand(this, 6)">Band 6</button>
+            <button class="band-btn" onclick="selectBand(this, 7)">Band 7</button>
+            <button class="band-btn" onclick="selectBand(this, 8)">Band 8</button>
+          </div>
+          <div id="band-feedback" style="margin-top:12px; font-size:13px; color:#555;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Writing History -->
+    <div class="card" style="margin-top:24px;">
+      <h2>練習歷史紀錄</h2>
+      <div id="history-box"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentTask = 1;
+    let timerInterval = null;
+    let secondsLeft = 20 * 60;
+    let timerRunning = false;
+
+    const taskConfig = {
+      1: {
+        minWords: 150,
+        totalSeconds: 20 * 60,
+        checklist: [
+          '有清楚的開頭段（paraphrase 題目）',
+          '提到整體趨勢（overview）',
+          '具體描述主要數據變化',
+          '有進行數據比較',
+          '沒有給出個人意見（Task 1 不需要）',
+          '字數達到 150 字以上',
+        ],
+        sample: `The bar chart illustrates the proportion of households in owned and rented accommodation in England and Wales from 1918 to 2011.
+
+Overall, there was a clear long-term shift from renting to owning homes over the period, although owned accommodation saw a slight decline in the final decade.
+
+In 1918, the vast majority of households rented their homes, at 77%, while only 23% were owner-occupied. This gap narrowed steadily over the following decades. By 1971, owned and rented accommodation reached roughly equal proportions at 52% and 48% respectively, marking a significant turning point.
+
+The trend towards homeownership continued to accelerate through the latter half of the twentieth century. Owner-occupied households peaked at 69% in 2001, compared to just 31% for renters. However, between 2001 and 2011, this trend reversed slightly, with ownership falling to 64% and renting rising to 36%.
+
+In summary, England and Wales experienced a dramatic transformation from a predominantly renting society to a homeowning one over the course of the twentieth century, though the final years suggest a modest reversal of this trend.`,
+      },
+      2: {
+        minWords: 250,
+        totalSeconds: 40 * 60,
+        checklist: [
+          '有清楚的開頭段（介紹兩個觀點）',
+          '第一個 body paragraph 討論父母的角色',
+          '第二個 body paragraph 討論學校的角色',
+          '清楚表明自己的立場',
+          '有使用連接詞（however, furthermore, in contrast…）',
+          '字數達到 250 字以上',
+        ],
+        sample: `It is widely debated whether the responsibility for teaching children to become good members of society lies with parents or schools. While both play important roles, I believe that parents bear the primary responsibility for this aspect of a child's development.
+
+Those who argue in favour of schools point out that educational institutions are specifically designed to prepare young people for life in society. Teachers are trained professionals who can impart values such as respect, cooperation, and civic responsibility in a structured environment. Furthermore, schools provide a social setting where children interact with peers from diverse backgrounds, which itself teaches tolerance and empathy.
+
+On the other hand, parents are a child's first and most influential teachers. From the earliest years of life, children observe and imitate the behaviour of their parents. Values such as honesty, kindness, and respect for others are best taught through daily family interactions rather than formal instruction. Research consistently shows that children whose parents are actively involved in their upbringing tend to develop stronger social skills and moral awareness.
+
+In my view, while schools certainly reinforce social values, the foundation must be laid at home. Parents who model good behaviour and take time to guide their children create a basis that schools can then build upon. A shared responsibility is ideal, but the home environment is arguably the more formative influence.
+
+In conclusion, both parents and schools contribute to raising socially responsible individuals, but the role of parents is fundamental and should not be delegated entirely to educational institutions.`,
+      },
+    };
+
+    function switchTask(num) {
+      currentTask = num;
+      document.querySelectorAll('.task-tab').forEach((t, i) => {
+        t.classList.toggle('active', i + 1 === num);
+      });
+      document.getElementById('prompt-task1').style.display = num === 1 ? '' : 'none';
+      document.getElementById('prompt-task2').style.display = num === 2 ? '' : 'none';
+
+      const cfg = taskConfig[num];
+      document.getElementById('wc-min').textContent = cfg.minWords;
+      secondsLeft = cfg.totalSeconds;
+      updateTimerDisplay();
+      resetEssay();
+    }
+
+    // Word counter
+    document.getElementById('essay').addEventListener('input', updateWordCount);
+
+    function countWords(text) {
+      return text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+    }
+
+    function updateWordCount() {
+      const wc = countWords(document.getElementById('essay').value);
+      const min = taskConfig[currentTask].minWords;
+      const el = document.getElementById('word-count-display');
+      document.getElementById('wc').textContent = wc;
+      el.className = 'word-count' + (wc === 0 ? '' : wc < min ? ' warn' : ' ok');
+    }
+
+    // Timer
+    function updateTimerDisplay() {
+      const m = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
+      const s = (secondsLeft % 60).toString().padStart(2, '0');
+      const el = document.getElementById('timer-display');
+      el.textContent = `${m}:${s}`;
+      el.className = 'timer-display' + (secondsLeft <= 120 ? ' warn' : '');
+    }
+
+    function toggleTimer() {
+      const btn = document.querySelector('.timer-controls button');
+      if (timerRunning) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        btn.textContent = '繼續計時';
+      } else {
+        timerRunning = true;
+        btn.textContent = '暫停計時';
+        timerInterval = setInterval(() => {
+          if (secondsLeft <= 0) {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            btn.textContent = '時間到';
+            alert('時間到！請完成作答。');
+            return;
+          }
+          secondsLeft--;
+          updateTimerDisplay();
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      secondsLeft = taskConfig[currentTask].totalSeconds;
+      updateTimerDisplay();
+      document.querySelector('.timer-controls button').textContent = '開始計時';
+    }
+
+    // History
+    let writingHistory = JSON.parse(localStorage.getItem('ielts_writing_history') || '[]');
+
+    function saveHistory(wc, timeUsed) {
+      const entry = {
+        date: new Date().toLocaleDateString('zh-TW'),
+        task: 'Task ' + currentTask,
+        words: wc,
+        time: timeUsed,
+        met: wc >= taskConfig[currentTask].minWords
+      };
+      writingHistory.unshift(entry);
+      if (writingHistory.length > 20) writingHistory = writingHistory.slice(0, 20);
+      localStorage.setItem('ielts_writing_history', JSON.stringify(writingHistory));
+    }
+
+    function renderHistory() {
+      const box = document.getElementById('history-box');
+      if (writingHistory.length === 0) {
+        box.innerHTML = '<div style="color:#aaa;font-size:14px;text-align:center;padding:16px;">還沒有練習紀錄</div>';
+        return;
+      }
+      box.innerHTML = writingHistory.map(e =>
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">' +
+        '<span style="color:#555;">' + e.date + '　' + e.task + '</span>' +
+        '<span>' + e.words + ' 字　' + e.time + '</span>' +
+        '<span class="tag ' + (e.met ? 'tag-correct' : 'tag-wrong') + '">' + (e.met ? '達標' : '未達標') + '</span>' +
+        '</div>'
+      ).join('');
+    }
+
+    // Submit
+    function submitEssay() {
+      const wc = countWords(document.getElementById('essay').value);
+      const min = taskConfig[currentTask].minWords;
+      if (wc < 10) {
+        alert('請先寫一些內容再提交！');
+        return;
+      }
+
+      clearInterval(timerInterval);
+      timerRunning = false;
+
+      // Calculate time used
+      const totalSec = taskConfig[currentTask].totalSeconds;
+      const usedSec = totalSec - secondsLeft;
+      const mm = Math.floor(usedSec / 60).toString().padStart(2,'0');
+      const ss = (usedSec % 60).toString().padStart(2,'0');
+      saveHistory(wc, mm + ':' + ss);
+      renderHistory();
+
+      const cfg = taskConfig[currentTask];
+      document.getElementById('sample-text').textContent = cfg.sample;
+
+      const checklistEl = document.getElementById('checklist-items');
+      checklistEl.innerHTML = cfg.checklist.map(item =>
+        `<label><input type="checkbox" /> ${item}</label>`
+      ).join('');
+
+      document.getElementById('band-select').querySelectorAll('.band-btn')
+        .forEach(b => b.classList.remove('selected'));
+      document.getElementById('band-feedback').textContent = '';
+
+      const section = document.getElementById('sample-section');
+      section.style.display = 'block';
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function selectBand(btn, band) {
+      document.querySelectorAll('.band-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      const feedback = {
+        4: '仍在發展階段。建議多練習段落結構，並注意基本文法。',
+        5: '有基本表達能力，但結構與詞彙仍需加強。建議多閱讀高分範文。',
+        6: '達到及格水準。注重連接詞的使用與論點的發展深度。',
+        7: '表現良好！繼續精進詞彙多樣性與論述的邏輯性。',
+        8: '優秀的作文！結構清晰、論點有力，繼續保持。',
+      };
+      document.getElementById('band-feedback').textContent = feedback[band];
+    }
+
+    function resetEssay() {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      document.getElementById('essay').value = '';
+      updateWordCount();
+      resetTimer();
+      document.getElementById('sample-section').style.display = 'none';
+      document.querySelector('.timer-controls button').textContent = '開始計時';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Init
+    updateTimerDisplay();
+    updateWordCount();
+    renderHistory();
+
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+  </script>
+</body>
+</html>

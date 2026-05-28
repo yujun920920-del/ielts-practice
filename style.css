@@ -1,0 +1,383 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Dark mode */
+:root {
+  --bg: #f0f4f8;
+  --card-bg: #ffffff;
+  --text: #333333;
+  --text-light: #888888;
+  --border: #ccd8e8;
+  --header-bg: #1a3c5e;
+}
+
+body.dark {
+  --bg: #1a1f2e;
+  --card-bg: #252b3b;
+  --text: #e8eaf0;
+  --text-light: #9aa0b4;
+  --border: #3a4258;
+  --header-bg: #111827;
+}
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
+}
+
+header {
+  background: var(--header-bg);
+  color: white;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+header a {
+  color: #aac8e8;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+header a:hover {
+  color: white;
+}
+
+header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.container {
+  max-width: 860px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+/* Index page */
+.hero {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.hero h2 {
+  font-size: 28px;
+  margin-bottom: 8px;
+  color: #1a3c5e;
+}
+
+.hero p {
+  color: #666;
+  font-size: 16px;
+}
+
+.modules {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.module-card {
+  background: white;
+  border-radius: 12px;
+  padding: 36px 28px;
+  text-align: center;
+  text-decoration: none;
+  color: #333;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 2px solid transparent;
+}
+
+.module-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  border-color: #1a3c5e;
+}
+
+.module-card .icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.module-card h3 {
+  font-size: 20px;
+  margin-bottom: 8px;
+  color: #1a3c5e;
+}
+
+.module-card p {
+  color: #777;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Question pages */
+.page-title {
+  font-size: 24px;
+  color: #1a3c5e;
+  margin-bottom: 4px;
+}
+
+.page-subtitle {
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 32px;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 24px;
+}
+
+.card h2 {
+  font-size: 17px;
+  color: #1a3c5e;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e8eef4;
+}
+
+/* Reading passage */
+.passage {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #444;
+}
+
+/* Questions */
+.questions-section h2 {
+  font-size: 17px;
+  color: #1a3c5e;
+  margin-bottom: 20px;
+}
+
+.question-block {
+  margin-bottom: 24px;
+}
+
+.question-block p {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #222;
+}
+
+.options label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.15s;
+  margin-bottom: 6px;
+  border: 1px solid #e0e8f0;
+}
+
+.options label:hover {
+  background: #f0f6ff;
+}
+
+.options input[type="radio"] {
+  accent-color: #1a3c5e;
+}
+
+.fill-input {
+  width: 100%;
+  max-width: 360px;
+  padding: 10px 14px;
+  border: 1px solid #ccd8e8;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.fill-input:focus {
+  border-color: #1a3c5e;
+}
+
+/* Audio player */
+.audio-wrap {
+  background: #f5f8fc;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.audio-wrap p {
+  font-size: 13px;
+  color: #888;
+}
+
+audio {
+  width: 100%;
+  max-width: 480px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-primary {
+  background: #1a3c5e;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #14304d;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: #e0e8f4;
+  color: #1a3c5e;
+}
+
+.btn-secondary:hover {
+  background: #c8d8ee;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* Results */
+#result-box {
+  display: none;
+  background: white;
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-top: 24px;
+}
+
+.score-banner {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.score-number {
+  font-size: 52px;
+  font-weight: 700;
+  color: #1a3c5e;
+}
+
+.score-label {
+  font-size: 16px;
+  color: #888;
+}
+
+.answer-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+}
+
+.answer-item:last-child {
+  border-bottom: none;
+}
+
+.tag {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tag-correct {
+  background: #d4edda;
+  color: #1a6630;
+}
+
+.tag-wrong {
+  background: #fde8e8;
+  color: #b52020;
+}
+
+.answer-detail {
+  line-height: 1.6;
+  color: #444;
+}
+
+.answer-detail .correct-ans {
+  color: #1a6630;
+  font-weight: 600;
+}
+
+/* Keyboard shortcut hint */
+.kbd-hint {
+  display: inline-block;
+  background: #e8f0fb;
+  color: #1a3c5e;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  border: 1px solid #c8d8ee;
+  font-family: monospace;
+}
+
+/* Mobile optimisation */
+@media (max-width: 600px) {
+  .modules { grid-template-columns: 1fr; }
+  .container { padding: 0 12px; }
+  header { padding: 12px 16px; }
+  header h1 { font-size: 18px; }
+  .btn { padding: 10px 20px; font-size: 14px; }
+  .card { padding: 18px 14px; }
+  .fill-input { max-width: 100%; }
+  .actions { flex-wrap: wrap; }
+  .options label { font-size: 13px; }
+  .page-title { font-size: 20px; }
+}
+
+/* Dark mode card/element overrides */
+body.dark .card,
+body.dark .module-card,
+body.dark .vocab-item {
+  background: var(--card-bg);
+  color: var(--text);
+  border-color: var(--border);
+}
+body.dark .page-title,
+body.dark .vocab-word,
+body.dark .card h2 { color: #aac8e8; }
+body.dark .passage,
+body.dark .vocab-meaning,
+body.dark .answer-detail { color: var(--text); }
+body.dark .vocab-example,
+body.dark .page-subtitle,
+body.dark .stats-bar { color: var(--text-light); }
+body.dark .options label:hover { background: #2e3a50; }
+body.dark .fill-input,
+body.dark textarea { background: #1e2535; color: var(--text); border-color: var(--border); }
