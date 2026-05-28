@@ -63,6 +63,9 @@
     .qty-btn { padding:10px 18px; border-radius:8px; border:2px solid #c8d8ee; background:white; color:#1a3c5e; font-size:15px; font-weight:600; cursor:pointer; transition:all 0.15s; }
     .qty-btn:hover { background:#e8f0fb; }
     .qty-btn.active { background:#1a3c5e; color:white; border-color:#1a3c5e; }
+    .accent-btn { padding:5px 12px; border-radius:16px; border:1.5px solid #c8d8ee; background:white; color:#555; font-size:13px; cursor:pointer; transition:all 0.15s; }
+    .accent-btn:hover { background:#e8f0fb; }
+    .accent-btn.active { background:#1a3c5e; color:white; border-color:#1a3c5e; }
   </style>
 
   <script>
@@ -130,9 +133,15 @@
     </div>
     <div id="card-view">
       <div class="card-progress"><div class="card-progress-fill" id="card-progress-fill"></div></div>
-      <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px;">
         <p class="card-hint" style="margin:0;">點擊卡片翻面 · 空白鍵翻面 · 左右鍵換卡</p>
         <button id="speech-toggle" onclick="toggleSpeech()" style="padding:5px 12px;border-radius:16px;border:1.5px solid #c8d8ee;background:white;color:#1a3c5e;font-size:12px;cursor:pointer;">🔊 朗讀：開</button>
+      </div>
+      <div style="display:flex;justify-content:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+        <button class="accent-btn" onclick="setAccent('en-GB',this)">🇬🇧 英式</button>
+        <button class="accent-btn" onclick="setAccent('en-AU',this)">🇦🇺 澳式</button>
+        <button class="accent-btn" onclick="setAccent('en-US',this)">🇺🇸 美式</button>
+        <button class="accent-btn" onclick="setAccent('en-NZ',this)">🇳🇿 紐式</button>
       </div>
       <div class="flashcard-wrap" onclick="flipCard()">
         <div class="flashcard" id="flashcard">
@@ -327,6 +336,7 @@
         ? ALL_WORDS.filter(w => starred.has(w.word))
         : [...filtered];
       cardIndex = 0;
+      initAccentButtons();
       showCard();
     }
 
@@ -349,6 +359,23 @@
     }
 
     let speechEnabled = true;
+    let accentLang = localStorage.getItem('ielts_accent') || 'en-GB';
+
+    function setAccent(lang, btn) {
+      accentLang = lang;
+      localStorage.setItem('ielts_accent', lang);
+      document.querySelectorAll('.accent-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (cardPool[cardIndex]) speakWord(cardPool[cardIndex].word);
+    }
+
+    function initAccentButtons() {
+      document.querySelectorAll('.accent-btn').forEach(btn => {
+        const lang = btn.getAttribute('onclick').match(/'(en-\w+)'/)[1];
+        btn.classList.toggle('active', lang === accentLang);
+      });
+    }
+
     function toggleSpeech() {
       speechEnabled = !speechEnabled;
       document.getElementById('speech-toggle').textContent = '🔊 朗讀：' + (speechEnabled ? '開' : '關');
@@ -357,7 +384,7 @@
       if (!speechEnabled || !window.speechSynthesis) return;
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(word);
-      u.lang = 'en-GB'; u.rate = 0.9;
+      u.lang = accentLang; u.rate = 0.9;
       window.speechSynthesis.speak(u);
     }
     function flipCard() {
