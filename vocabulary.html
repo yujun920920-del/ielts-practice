@@ -128,7 +128,7 @@
       <div class="vocab-list" id="vocab-list"></div>
       <div class="pagination" id="pagination"></div>
     </div>
-    <div id="card-view" style="display:none;">
+    <div id="card-view">
       <div class="card-progress"><div class="card-progress-fill" id="card-progress-fill"></div></div>
       <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px;">
         <p class="card-hint" style="margin:0;">點擊卡片翻面 · 空白鍵翻面 · 左右鍵換卡</p>
@@ -379,7 +379,7 @@
         b.classList.toggle('active', ['list','card','starred','spell','errors'][i] === mode);
       });
       document.getElementById('list-view').style.display = mode === 'list' ? '' : 'none';
-      document.getElementById('card-view').style.display = (mode === 'card' || mode === 'starred') ? '' : 'none';
+      document.getElementById('card-view').style.display = (mode === 'card' || mode === 'starred') ? 'block' : 'none';
       document.getElementById('spell-view').style.display = mode === 'spell' ? '' : 'none';
       document.getElementById('errors-view').style.display = mode === 'errors' ? '' : 'none';
       document.getElementById('toolbar').style.display = mode === 'list' ? '' : 'none';
@@ -598,6 +598,7 @@
 
     buildFilters();
     applyFilter();
+    switchMode('list');
 
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
   </script>
