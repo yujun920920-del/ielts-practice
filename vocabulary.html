@@ -139,6 +139,7 @@
           <div class="card-face card-front">
             <div class="card-word" id="card-word"></div>
             <div class="card-type" id="card-type"></div>
+            <button onclick="event.stopPropagation(); speakWord(document.getElementById('card-word').textContent)" style="margin-top:14px;background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.5);color:white;border-radius:20px;padding:5px 16px;font-size:14px;cursor:pointer;">🔊 聽發音</button>
           </div>
           <div class="card-face card-back">
             <div class="card-meaning" id="card-meaning"></div>
@@ -344,6 +345,7 @@
       document.getElementById('flashcard').classList.remove('flipped');
       document.getElementById('card-counter').textContent = (cardIndex+1) + ' / ' + cardPool.length;
       document.getElementById('card-progress-fill').style.width = Math.round(((cardIndex+1)/cardPool.length)*100) + '%';
+      speakWord(w.word);
     }
 
     let speechEnabled = true;
@@ -359,11 +361,7 @@
       window.speechSynthesis.speak(u);
     }
     function flipCard() {
-      const card = document.getElementById('flashcard');
-      card.classList.toggle('flipped');
-      if (card.classList.contains('flipped') && cardPool[cardIndex]) {
-        speakWord(cardPool[cardIndex].word);
-      }
+      document.getElementById('flashcard').classList.toggle('flipped');
     }
     function nextCard() { if (cardIndex < cardPool.length-1) { cardIndex++; showCard(); } }
     function prevCard() { if (cardIndex > 0) { cardIndex--; showCard(); } }
