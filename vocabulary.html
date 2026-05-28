@@ -361,6 +361,7 @@
     let speechEnabled = true;
     let accentLang = localStorage.getItem('ielts_accent') || 'en-GB';
     const pronunciationCache = {};
+    const pendingFetch = new Set();
 
     function setAccent(lang, btn) {
       accentLang = lang;
@@ -390,27 +391,19 @@
       window.speechSynthesis.speak(u);
     }
 
-    function buildCambridgeURL(word, isUK) {
-      const prefix = isUK ? 'uk' : 'us';
-      const w = word.toLowerCase().replace(/[^a-z]/g, '');
-      if (!w) return '';
-      const f1 = prefix + w[0];
-      const f2 = prefix + w.substring(0, Math.min(3, w.length));
-      return `https://dictionary.cambridge.org/media/english/${prefix}_pron/u/${f1}/${f2}/${prefix + w}.mp3`;
-    }
-
     async function fetchAndPlay(word) {
       if (!speechEnabled) return;
       const cacheKey = word + '|' + accentLang;
       if (pronunciationCache[cacheKey]) {
         const c = pronunciationCache[cacheKey];
-        playAudio(c.audio, c.audio2, c.phonetic, word);
+        playAudio(c.audio, c.phonetic, word);
         return;
       }
+      if (pendingFetch.has(cacheKey)) return;
+      pendingFetch.add(cacheKey);
       const isUK = accentLang !== 'en-US';
-      const cambridgeURL = buildCambridgeURL(word, isUK);
       let phonetic = '';
-      let fallbackAudio = '';
+      let audioURL = '';
       try {
         const res = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word));
         if (res.ok) {
@@ -418,34 +411,25 @@
           const entry = data[0];
           const phonetics = entry.phonetics || [];
           const preferred = isUK ? 'uk' : 'us';
-          const fallback  = isUK ? 'us' : 'uk';
           const pick = (k) => phonetics.find(p => p.audio && p.audio.includes(k));
-          const chosen = pick(preferred) || pick(fallback) || phonetics.find(p => p.audio) || {};
+          const chosen = pick(preferred) || {};
           phonetic = (phonetics.find(p => p.text) || {}).text || entry.phonetic || '';
-          fallbackAudio = chosen.audio || '';
+          audioURL = chosen.audio || '';
         }
       } catch(e) {}
-      pronunciationCache[cacheKey] = { audio: cambridgeURL, audio2: fallbackAudio, phonetic };
-      playAudio(cambridgeURL, fallbackAudio, phonetic, word);
+      pendingFetch.delete(cacheKey);
+      pronunciationCache[cacheKey] = { audio: audioURL, phonetic };
+      playAudio(audioURL, phonetic, word);
     }
 
-    function playAudio(url, url2, phonetic, fallbackWord) {
+    function playAudio(url, phonetic, fallbackWord) {
       const el = document.getElementById('card-phonetic');
       if (el && phonetic) el.textContent = phonetic;
-      if (!url) { speakWord(fallbackWord); return; }
-      const a = new Audio(url);
-      let tried = false;
-      const tryNext = () => {
-        if (tried) return;
-        tried = true;
-        if (url2) {
-          new Audio(url2).play().catch(() => speakWord(fallbackWord));
-        } else {
-          speakWord(fallbackWord);
-        }
-      };
-      a.onerror = tryNext;
-      a.play().catch(tryNext);
+      if (url) {
+        new Audio(url).play().catch(() => speakWord(fallbackWord));
+      } else {
+        speakWord(fallbackWord);
+      }
     }
     function flipCard() {
       document.getElementById('flashcard').classList.toggle('flipped');
