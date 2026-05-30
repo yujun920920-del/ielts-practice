@@ -307,21 +307,25 @@
       <div class="prompt-label">Writing Prompt</div>
 
       <div id="prompt-task1">
-        <div class="prompt-box">
-          The chart below shows the percentage of households in owned and rented accommodation in England and Wales between 1918 and 2011.<br /><br />
-          <strong>Summarise the information by selecting and reporting the main features, and make comparisons where relevant.</strong>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+          <span id="t1-type-badge" style="background:#1a3c5e;color:white;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:0.5px;"></span>
+          <span id="t1-counter" style="font-size:13px;color:#aaa;"></span>
+          <button class="btn btn-secondary" style="margin-left:auto;padding:6px 14px;font-size:12px;" onclick="randomTask1Question()">🔀 隨機換題</button>
         </div>
+        <div class="prompt-box" id="t1-prompt-text"></div>
         <div class="prompt-note">Task 1：至少 150 字　｜　建議時間 20 分鐘</div>
-        <div style="margin-top:14px; background:#f5f8fc; border-radius:8px; padding:16px;">
+        <div style="margin-top:14px;background:#f5f8fc;border-radius:8px;padding:16px;">
           <canvas id="task1-chart" height="160"></canvas>
         </div>
       </div>
 
       <div id="prompt-task2" style="display:none;">
-        <div class="prompt-box">
-          Some people think that parents should teach children how to be good members of society. Others, however, believe that school is the place to learn this.<br /><br />
-          <strong>Discuss both these views and give your own opinion.</strong>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+          <span id="t2-type-badge" style="background:#1a3c5e;color:white;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:0.5px;"></span>
+          <span id="t2-counter" style="font-size:13px;color:#aaa;"></span>
+          <button class="btn btn-secondary" style="margin-left:auto;padding:6px 14px;font-size:12px;" onclick="randomTask2Question()">🔀 隨機換題</button>
         </div>
+        <div class="prompt-box" id="t2-prompt-text"></div>
         <div class="prompt-note">Task 2：至少 250 字　｜　建議時間 40 分鐘</div>
       </div>
     </div>
@@ -419,23 +423,6 @@ In summary, England and Wales experienced a dramatic transformation from a predo
       2: {
         minWords: 250,
         totalSeconds: 40 * 60,
-        checklist: [
-          '有清楚的開頭段（介紹兩個觀點）',
-          '第一個 body paragraph 討論父母的角色',
-          '第二個 body paragraph 討論學校的角色',
-          '清楚表明自己的立場',
-          '有使用連接詞（however, furthermore, in contrast…）',
-          '字數達到 250 字以上',
-        ],
-        sample: `It is widely debated whether the responsibility for teaching children to become good members of society lies with parents or schools. While both play important roles, I believe that parents bear the primary responsibility for this aspect of a child's development.
-
-Those who argue in favour of schools point out that educational institutions are specifically designed to prepare young people for life in society. Teachers are trained professionals who can impart values such as respect, cooperation, and civic responsibility in a structured environment. Furthermore, schools provide a social setting where children interact with peers from diverse backgrounds, which itself teaches tolerance and empathy.
-
-On the other hand, parents are a child's first and most influential teachers. From the earliest years of life, children observe and imitate the behaviour of their parents. Values such as honesty, kindness, and respect for others are best taught through daily family interactions rather than formal instruction. Research consistently shows that children whose parents are actively involved in their upbringing tend to develop stronger social skills and moral awareness.
-
-In my view, while schools certainly reinforce social values, the foundation must be laid at home. Parents who model good behaviour and take time to guide their children create a basis that schools can then build upon. A shared responsibility is ideal, but the home environment is arguably the more formative influence.
-
-In conclusion, both parents and schools contribute to raising socially responsible individuals, but the role of parents is fundamental and should not be delegated entirely to educational institutions.`,
       },
     };
 
@@ -446,6 +433,8 @@ In conclusion, both parents and schools contribute to raising socially responsib
       });
       document.getElementById('prompt-task1').style.display = num === 1 ? '' : 'none';
       document.getElementById('prompt-task2').style.display = num === 2 ? '' : 'none';
+      if (num === 1) loadTask1Question(currentTask1Idx);
+      if (num === 2) loadTask2Question(currentTask2Idx);
 
       const cfg = taskConfig[num];
       document.getElementById('wc-min').textContent = cfg.minWords;
@@ -561,10 +550,19 @@ In conclusion, both parents and schools contribute to raising socially responsib
       renderHistory();
 
       const cfg = taskConfig[currentTask];
-      document.getElementById('sample-text').textContent = cfg.sample;
 
+      if (currentTask === 1) {
+        document.getElementById('sample-text').textContent = cfg.sample;
+        document.getElementById('sample-section').querySelector('.card:first-child').style.display = '';
+      } else {
+        document.getElementById('sample-section').querySelector('.card:first-child').style.display = 'none';
+      }
+
+      const checklist = currentTask === 1
+        ? cfg.checklist
+        : checklistByType[task2Questions[currentTask2Idx].type];
       const checklistEl = document.getElementById('checklist-items');
-      checklistEl.innerHTML = cfg.checklist.map(item =>
+      checklistEl.innerHTML = checklist.map(item =>
         `<label><input type="checkbox" /> ${item}</label>`
       ).join('');
 
@@ -601,57 +599,227 @@ In conclusion, both parents and schools contribute to raising socially responsib
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // --- Task 1 Chart ---
-    (function() {
-      const ctx = document.getElementById('task1-chart').getContext('2d');
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['1918','1939','1953','1961','1971','1981','1991','2001','2011'],
-          datasets: [
-            {
-              label: 'Owner-occupied',
-              data: [23, 32, 38, 43, 52, 58, 67, 69, 64],
-              backgroundColor: '#1a3c5e',
-              borderRadius: 3,
-            },
-            {
-              label: 'Rented',
-              data: [77, 68, 62, 57, 48, 42, 33, 31, 36],
-              backgroundColor: '#90b8d8',
-              borderRadius: 3,
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'bottom', labels: { font: { size: 12 } } },
-            title: {
-              display: true,
-              text: 'Percentage of households in owned and rented accommodation in England and Wales, 1918–2011',
-              font: { size: 12 },
-              color: '#333',
-              padding: { bottom: 12 }
-            },
-            tooltip: {
-              callbacks: {
-                label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}%`
-              }
-            }
+    // --- Task 2 Questions ---
+    const task2Questions = [
+      {
+        type: 'discuss', typeLabel: 'Discuss Both Views',
+        text: 'Some people think that parents should teach children how to be good members of society. Others, however, believe that school is the place to learn this.',
+        instruction: 'Discuss both these views and give your own opinion.'
+      },
+      {
+        type: 'discuss', typeLabel: 'Discuss Both Views',
+        text: 'Some people believe that unpaid community service should be a compulsory part of high school programmes. Others disagree.',
+        instruction: 'Discuss both views and give your own opinion.'
+      },
+      {
+        type: 'discuss', typeLabel: 'Discuss Both Views',
+        text: 'Some people think it is better to educate boys and girls in separate schools. Others believe that boys and girls benefit more from attending mixed schools.',
+        instruction: 'Discuss both views and give your own opinion.'
+      },
+      {
+        type: 'opinion', typeLabel: 'Agree / Disagree',
+        text: 'Some people think that the government should ban dangerous sports such as boxing and motor racing.',
+        instruction: 'To what extent do you agree or disagree?'
+      },
+      {
+        type: 'opinion', typeLabel: 'Agree / Disagree',
+        text: 'Many people believe that social media has had a negative impact on both individuals and society.',
+        instruction: 'To what extent do you agree or disagree?'
+      },
+      {
+        type: 'opinion', typeLabel: 'Agree / Disagree',
+        text: 'Some people think that a sense of competition in children should be encouraged. Others believe that children who are taught to cooperate rather than compete become more useful adults.',
+        instruction: 'Discuss both views and give your own opinion.'
+      },
+      {
+        type: 'problem-solution', typeLabel: 'Problem & Solution',
+        text: 'In many countries, the gap between the rich and the poor is increasing.',
+        instruction: 'What problems does this cause? What can be done to tackle these problems?'
+      },
+      {
+        type: 'problem-solution', typeLabel: 'Problem & Solution',
+        text: 'In many cities, traffic congestion is a growing problem.',
+        instruction: 'What are the causes of this problem? What measures can be taken to solve it?'
+      },
+      {
+        type: 'adv-disadv', typeLabel: 'Advantages & Disadvantages',
+        text: 'In some countries, it is now possible for people to do their shopping, banking and even work from home using the internet.',
+        instruction: 'Do the advantages of this development outweigh the disadvantages?'
+      },
+      {
+        type: 'adv-disadv', typeLabel: 'Advantages & Disadvantages',
+        text: 'An increasing number of people are choosing to live and work abroad.',
+        instruction: 'What are the advantages and disadvantages for both individuals and their home countries?'
+      }
+    ];
+
+    const checklistByType = {
+      'discuss': [
+        '有清楚的開頭段（介紹兩個觀點）',
+        'Body 1：討論第一個觀點並舉例',
+        'Body 2：討論第二個觀點並舉例',
+        '清楚表明自己的立場',
+        '有使用連接詞（however, furthermore, in contrast…）',
+        '字數達到 250 字以上',
+      ],
+      'opinion': [
+        '開頭段清楚表明立場',
+        'Body 1：提供第一個理由與例子',
+        'Body 2：提供第二個理由或反駁反方',
+        '結論段重申立場',
+        '有使用連接詞（because, therefore, however…）',
+        '字數達到 250 字以上',
+      ],
+      'problem-solution': [
+        '開頭段說明問題背景',
+        'Body 1：分析主要問題或原因',
+        'Body 2：提出具體可行的解決方案',
+        '有使用因果連接詞（as a result, consequently, therefore…）',
+        '解決方案與問題相對應',
+        '字數達到 250 字以上',
+      ],
+      'adv-disadv': [
+        '開頭段介紹主題背景',
+        'Body 1：討論優點並舉例',
+        'Body 2：討論缺點並舉例',
+        '結論段給出平衡總結或個人立場',
+        '有使用對比連接詞（on the other hand, however, despite…）',
+        '字數達到 250 字以上',
+      ],
+    };
+
+    let currentTask2Idx = 0;
+
+    function loadTask2Question(idx) {
+      const q = task2Questions[idx];
+      document.getElementById('t2-type-badge').textContent = q.typeLabel;
+      document.getElementById('t2-counter').textContent = `題目 ${idx + 1} / ${task2Questions.length}`;
+      document.getElementById('t2-prompt-text').innerHTML =
+        q.text + '<br /><br /><strong>' + q.instruction + '</strong>';
+    }
+
+    function randomTask2Question() {
+      let idx;
+      do { idx = Math.floor(Math.random() * task2Questions.length); }
+      while (idx === currentTask2Idx && task2Questions.length > 1);
+      currentTask2Idx = idx;
+      loadTask2Question(idx);
+      resetEssay();
+    }
+
+    // --- Task 1 Questions ---
+    let task1Chart = null;
+    let currentTask1Idx = 0;
+
+    const commonOpts = (yLabel) => ({
+      responsive: true,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { ticks: { callback: v => v + (yLabel || '') }, grid: { color: '#eee' } }
+      }
+    });
+
+    const task1Questions = [
+      {
+        typeLabel: 'Bar Chart',
+        prompt: 'The chart below shows the percentage of households in owned and rented accommodation in England and Wales between 1918 and 2011.',
+        chartConfig: {
+          type: 'bar',
+          data: {
+            labels: ['1918','1939','1953','1961','1971','1981','1991','2001','2011'],
+            datasets: [
+              { label: 'Owner-occupied', data: [23,32,38,43,52,58,67,69,64], backgroundColor: '#1a3c5e', borderRadius: 3 },
+              { label: 'Rented', data: [77,68,62,57,48,42,33,31,36], backgroundColor: '#90b8d8', borderRadius: 3 }
+            ]
           },
-          scales: {
-            x: { stacked: true, grid: { display: false } },
-            y: {
-              stacked: true,
-              min: 0, max: 100,
-              ticks: { callback: v => v + '%', stepSize: 20 },
-              grid: { color: '#eee' }
-            }
+          options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}%` } } },
+            scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, min: 0, max: 100, ticks: { callback: v => v+'%', stepSize: 20 }, grid: { color: '#eee' } } }
           }
         }
-      });
-    })();
+      },
+      {
+        typeLabel: 'Line Graph',
+        prompt: 'The graph below shows the quantities of goods transported in the UK between 1974 and 2002 by four different modes of transport.',
+        chartConfig: {
+          type: 'line',
+          data: {
+            labels: ['1974','1978','1982','1986','1990','1994','1998','2002'],
+            datasets: [
+              { label: 'Road', data: [70,80,86,96,108,112,118,125], borderColor: '#1a3c5e', backgroundColor: 'transparent', tension: 0.3, pointRadius: 4 },
+              { label: 'Water', data: [40,41,43,37,36,33,31,33], borderColor: '#2196F3', backgroundColor: 'transparent', tension: 0.3, pointRadius: 4 },
+              { label: 'Rail', data: [40,36,31,28,26,26,25,22], borderColor: '#e67e22', backgroundColor: 'transparent', tension: 0.3, pointRadius: 4 },
+              { label: 'Pipeline', data: [5,8,11,13,14,14,12,12], borderColor: '#27ae60', backgroundColor: 'transparent', tension: 0.3, pointRadius: 4 }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y} bn tonne km` } } },
+            scales: { x: { grid: { display: false } }, y: { min: 0, ticks: { stepSize: 20 }, grid: { color: '#eee' } } }
+          }
+        }
+      },
+      {
+        typeLabel: 'Bar Chart (Grouped)',
+        prompt: 'The chart below shows the percentage of male and female students enrolled in five subject areas at a UK university in 2010.',
+        chartConfig: {
+          type: 'bar',
+          data: {
+            labels: ['Humanities','Law','Business','Sciences','Engineering'],
+            datasets: [
+              { label: 'Male', data: [35,42,55,60,78], backgroundColor: '#1a3c5e', borderRadius: 3 },
+              { label: 'Female', data: [65,58,45,40,22], backgroundColor: '#90b8d8', borderRadius: 3 }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}%` } } },
+            scales: { x: { grid: { display: false } }, y: { min: 0, max: 100, ticks: { callback: v => v+'%', stepSize: 20 }, grid: { color: '#eee' } } }
+          }
+        }
+      },
+      {
+        typeLabel: 'Pie Chart',
+        prompt: 'The pie chart below shows how energy is used in an average Australian household.',
+        chartConfig: {
+          type: 'doughnut',
+          data: {
+            labels: ['Space heating','Water heating','Appliances','Lighting','Cooking','Other'],
+            datasets: [{
+              data: [42,23,15,8,7,5],
+              backgroundColor: ['#1a3c5e','#2196F3','#e67e22','#27ae60','#e91e63','#9c27b0'],
+              borderWidth: 2, borderColor: '#fff'
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } }, tooltip: { callbacks: { label: c => `${c.label}: ${c.raw}%` } } }
+          }
+        }
+      }
+    ];
+
+    function loadTask1Question(idx) {
+      currentTask1Idx = idx;
+      const q = task1Questions[idx];
+      document.getElementById('t1-type-badge').textContent = q.typeLabel;
+      document.getElementById('t1-counter').textContent = `題目 ${idx+1} / ${task1Questions.length}`;
+      document.getElementById('t1-prompt-text').innerHTML =
+        q.prompt + '<br /><br /><strong>Summarise the information by selecting and reporting the main features, and make comparisons where relevant.</strong>';
+      if (task1Chart) { task1Chart.destroy(); task1Chart = null; }
+      const ctx = document.getElementById('task1-chart').getContext('2d');
+      task1Chart = new Chart(ctx, q.chartConfig);
+    }
+
+    function randomTask1Question() {
+      let idx;
+      do { idx = Math.floor(Math.random() * task1Questions.length); }
+      while (idx === currentTask1Idx && task1Questions.length > 1);
+      loadTask1Question(idx);
+      resetEssay();
+    }
 
     // --- AI Feedback ---
     function initApiKey() {
@@ -780,6 +948,8 @@ ${essay}
     updateWordCount();
     renderHistory();
     initApiKey();
+    loadTask1Question(0);
+    loadTask2Question(0);
 
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
   </script>
