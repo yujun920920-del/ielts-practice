@@ -11,6 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="IELTS" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     /* Task selector */
     .task-tabs {
@@ -183,6 +184,79 @@
       color: white;
       border-color: #1a3c5e;
     }
+
+    /* AI Key Setting */
+    .ai-key-bar {
+      background: #fff8e1;
+      border: 1.5px solid #ffd54f;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .ai-key-bar.hidden { display: none; }
+    .ai-key-bar-label { font-size: 14px; font-weight: 700; color: #5d4037; white-space: nowrap; }
+    .ai-key-input-row { display: flex; gap: 8px; flex: 1; min-width: 200px; }
+    .ai-key-input-row input {
+      flex: 1; padding: 8px 12px;
+      border: 1.5px solid #ffd54f; border-radius: 6px;
+      font-size: 13px; font-family: monospace; outline: none;
+    }
+    .ai-key-input-row input:focus { border-color: #ff8f00; }
+    .ai-key-set-info { font-size: 12px; color: #888; margin-bottom: 16px; }
+    .ai-key-set-info a { color: #1a3c5e; cursor: pointer; text-decoration: underline; }
+
+    /* AI Result */
+    .ai-result-section { display: none; margin-top: 16px; }
+    .ai-loading { text-align: center; padding: 32px; color: #1a3c5e; font-size: 15px; }
+    .ai-loading .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid #c8d8ee; border-top-color: #1a3c5e;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .ai-overall {
+      text-align: center; padding: 22px;
+      background: linear-gradient(135deg, #1a3c5e, #2563a8);
+      border-radius: 12px; color: white; margin-bottom: 16px;
+    }
+    .ai-overall-band { font-size: 56px; font-weight: 800; line-height: 1; }
+    .ai-overall-label { font-size: 14px; opacity: 0.85; margin-top: 4px; }
+    .ai-score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .ai-score-item {
+      background: #f5f8fc; border-radius: 8px;
+      padding: 14px; border: 1px solid #dce8f5;
+    }
+    .ai-score-item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .ai-score-name { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+    .ai-score-val { font-size: 24px; font-weight: 800; color: #1a3c5e; }
+    .ai-score-feedback { font-size: 12px; color: #666; line-height: 1.5; }
+    .ai-section-title { font-size: 14px; font-weight: 700; color: #1a3c5e; margin-bottom: 10px; }
+    .ai-list { list-style: none; padding: 0; margin: 0; }
+    .ai-list li {
+      padding: 7px 0; font-size: 13px; line-height: 1.5;
+      border-bottom: 1px solid #f0f0f0; display: flex; gap: 8px;
+    }
+    .ai-list li:last-child { border-bottom: none; }
+    .ai-list li::before { content: '✓'; color: #27ae60; font-weight: bold; flex-shrink: 0; }
+    .ai-list.improve li::before { content: '→'; color: #e67e22; }
+    .ai-correction-item {
+      background: #fff8f0; border-left: 3px solid #e67e22;
+      border-radius: 0 6px 6px 0; padding: 10px 14px;
+      margin-bottom: 8px; font-size: 13px;
+    }
+    .ai-correction-orig { color: #c0392b; text-decoration: line-through; margin-bottom: 4px; }
+    .ai-correction-fixed { color: #1a6630; font-weight: 600; margin-bottom: 4px; }
+    .ai-correction-exp { color: #777; }
+    .ai-error {
+      background: #fff0f0; border: 1px solid #ffcdd2;
+      border-radius: 8px; padding: 16px;
+      color: #c0392b; font-size: 14px; text-align: center;
+    }
   </style>
 
   <script>
@@ -208,6 +282,20 @@
     <div class="page-title">Writing Practice</div>
     <div class="page-subtitle">選擇題型，在時間內完成作文，完成後對照範文自我評估。</div>
 
+    <!-- AI Key Setting -->
+    <div id="ai-key-bar" class="ai-key-bar">
+      <div class="ai-key-bar-label">🤖 Gemini API Key</div>
+      <div style="flex:1;">
+        <div class="ai-key-input-row">
+          <input type="password" id="ai-key-input" placeholder="貼上你的 Gemini API Key..." />
+          <button class="btn btn-primary" style="padding:8px 16px;font-size:13px;white-space:nowrap;" onclick="saveApiKey()">儲存</button>
+        </div>
+      </div>
+    </div>
+    <div id="ai-key-set-info" class="ai-key-set-info" style="display:none;">
+      🤖 AI 批改已啟用 &nbsp;<a onclick="resetApiKey()">修改 Key</a>
+    </div>
+
     <!-- Task selector -->
     <div class="task-tabs">
       <button class="task-tab active" onclick="switchTask(1)">Task 1　圖表描述</button>
@@ -224,18 +312,8 @@
           <strong>Summarise the information by selecting and reporting the main features, and make comparisons where relevant.</strong>
         </div>
         <div class="prompt-note">Task 1：至少 150 字　｜　建議時間 20 分鐘</div>
-        <!-- Simple chart description image placeholder -->
-        <div style="margin-top:14px; background:#e8f0fb; border-radius:8px; padding:16px; font-size:13px; color:#555; line-height:1.6;">
-          <strong>圖表數據（文字版）：</strong><br />
-          1918：owned 23%，rented 77%<br />
-          1939：owned 32%，rented 68%<br />
-          1953：owned 38%，rented 62%<br />
-          1961：owned 43%，rented 57%<br />
-          1971：owned 52%，rented 48%<br />
-          1981：owned 58%，rented 42%<br />
-          1991：owned 67%，rented 33%<br />
-          2001：owned 69%，rented 31%<br />
-          2011：owned 64%，rented 36%
+        <div style="margin-top:14px; background:#f5f8fc; border-radius:8px; padding:16px;">
+          <canvas id="task1-chart" height="160"></canvas>
         </div>
       </div>
 
@@ -267,7 +345,13 @@
       <textarea id="essay" placeholder="在這裡開始寫作..."></textarea>
       <div class="actions" style="margin-top:16px;">
         <button class="btn btn-primary" onclick="submitEssay()">完成作答 &amp; 看範文</button>
+        <button class="btn" style="background:#5c35d4;color:white;" onclick="getAiFeedback()">🤖 AI 批改</button>
         <button class="btn btn-secondary" onclick="resetEssay()">重新作答</button>
+      </div>
+
+      <!-- AI Result -->
+      <div class="ai-result-section" id="ai-result-section">
+        <div id="ai-result-content"></div>
       </div>
     </div>
 
@@ -517,10 +601,185 @@ In conclusion, both parents and schools contribute to raising socially responsib
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // --- Task 1 Chart ---
+    (function() {
+      const ctx = document.getElementById('task1-chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['1918','1939','1953','1961','1971','1981','1991','2001','2011'],
+          datasets: [
+            {
+              label: 'Owner-occupied',
+              data: [23, 32, 38, 43, 52, 58, 67, 69, 64],
+              backgroundColor: '#1a3c5e',
+              borderRadius: 3,
+            },
+            {
+              label: 'Rented',
+              data: [77, 68, 62, 57, 48, 42, 33, 31, 36],
+              backgroundColor: '#90b8d8',
+              borderRadius: 3,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 12 } } },
+            title: {
+              display: true,
+              text: 'Percentage of households in owned and rented accommodation in England and Wales, 1918–2011',
+              font: { size: 12 },
+              color: '#333',
+              padding: { bottom: 12 }
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}%`
+              }
+            }
+          },
+          scales: {
+            x: { stacked: true, grid: { display: false } },
+            y: {
+              stacked: true,
+              min: 0, max: 100,
+              ticks: { callback: v => v + '%', stepSize: 20 },
+              grid: { color: '#eee' }
+            }
+          }
+        }
+      });
+    })();
+
+    // --- AI Feedback ---
+    function initApiKey() {
+      const key = localStorage.getItem('ielts_gemini_key');
+      if (key) {
+        document.getElementById('ai-key-bar').classList.add('hidden');
+        document.getElementById('ai-key-set-info').style.display = 'block';
+      } else {
+        document.getElementById('ai-key-bar').classList.remove('hidden');
+        document.getElementById('ai-key-set-info').style.display = 'none';
+      }
+    }
+
+    function saveApiKey() {
+      const key = document.getElementById('ai-key-input').value.trim();
+      if (!key) { alert('請輸入 API Key'); return; }
+      localStorage.setItem('ielts_gemini_key', key);
+      document.getElementById('ai-key-input').value = '';
+      initApiKey();
+    }
+
+    function resetApiKey() {
+      localStorage.removeItem('ielts_gemini_key');
+      initApiKey();
+    }
+
+    async function getAiFeedback() {
+      const apiKey = localStorage.getItem('ielts_gemini_key');
+      if (!apiKey) { alert('請先設定 Gemini API Key（頁面上方輸入欄）'); return; }
+
+      const essay = document.getElementById('essay').value.trim();
+      if (essay.length < 50) { alert('請先寫一些內容再使用 AI 批改！'); return; }
+
+      const section = document.getElementById('ai-result-section');
+      const content = document.getElementById('ai-result-content');
+      section.style.display = 'block';
+      content.innerHTML = '<div class="ai-loading"><div class="spinner"></div>AI 批改中，請稍候...</div>';
+      section.scrollIntoView({ behavior: 'smooth' });
+
+      const taskLabel = currentTask === 1 ? 'Task 1（圖表描述）' : 'Task 2（議論文）';
+      const prompt = `你是一位專業的 IELTS 寫作考官。請評估以下 IELTS Writing ${taskLabel} 的作文。
+
+學生作文：
+"""
+${essay}
+"""
+
+請根據官方四項評分標準評估，只回傳 JSON（不加任何其他文字或 markdown）：
+{"overall_band":數字,"task_achievement":{"score":數字,"feedback":"2-3句中文"},"coherence_cohesion":{"score":數字,"feedback":"2-3句中文"},"lexical_resource":{"score":數字,"feedback":"2-3句中文"},"grammatical_range":{"score":數字,"feedback":"2-3句中文"},"strengths":["優點1","優點2","優點3"],"improvements":["建議1","建議2","建議3"],"corrected_sentences":[{"original":"原句","corrected":"修正後","explanation":"說明"}]}`;
+
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': apiKey
+            },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+          }
+        );
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          const msg = errBody?.error?.message || res.status;
+          throw new Error('API 錯誤：' + msg);
+        }
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const match = text.match(/\{[\s\S]*\}/);
+        if (!match) throw new Error('無法解析 AI 回應');
+        renderAiResults(JSON.parse(match[0]));
+      } catch (err) {
+        content.innerHTML = `<div class="ai-error">❌ ${err.message}<br><small>請確認 API Key 是否正確，或稍後再試。</small></div>`;
+      }
+    }
+
+    function renderAiResults(r) {
+      const criteriaName = currentTask === 1 ? 'Task Achievement' : 'Task Response';
+      const ta = r.task_achievement || {};
+      const cc = r.coherence_cohesion || {};
+      const lr = r.lexical_resource || {};
+      const gr = r.grammatical_range || {};
+
+      const strengths = (r.strengths || []).map(s => `<li>${s}</li>`).join('');
+      const improvements = (r.improvements || []).map(s => `<li>${s}</li>`).join('');
+      const corrections = (r.corrected_sentences || []).map(c =>
+        `<div class="ai-correction-item">
+          <div class="ai-correction-orig">✗ ${c.original}</div>
+          <div class="ai-correction-fixed">✓ ${c.corrected}</div>
+          <div class="ai-correction-exp">${c.explanation}</div>
+        </div>`
+      ).join('');
+
+      document.getElementById('ai-result-content').innerHTML = `
+        <div class="ai-overall">
+          <div class="ai-overall-band">${r.overall_band}</div>
+          <div class="ai-overall-label">估計 Band Score</div>
+        </div>
+        <div class="ai-score-grid">
+          <div class="ai-score-item">
+            <div class="ai-score-item-top"><div class="ai-score-name">${criteriaName}</div><div class="ai-score-val">${ta.score ?? '-'}</div></div>
+            <div class="ai-score-feedback">${ta.feedback || ''}</div>
+          </div>
+          <div class="ai-score-item">
+            <div class="ai-score-item-top"><div class="ai-score-name">Coherence &amp; Cohesion</div><div class="ai-score-val">${cc.score ?? '-'}</div></div>
+            <div class="ai-score-feedback">${cc.feedback || ''}</div>
+          </div>
+          <div class="ai-score-item">
+            <div class="ai-score-item-top"><div class="ai-score-name">Lexical Resource</div><div class="ai-score-val">${lr.score ?? '-'}</div></div>
+            <div class="ai-score-feedback">${lr.feedback || ''}</div>
+          </div>
+          <div class="ai-score-item">
+            <div class="ai-score-item-top"><div class="ai-score-name">Grammatical Range</div><div class="ai-score-val">${gr.score ?? '-'}</div></div>
+            <div class="ai-score-feedback">${gr.feedback || ''}</div>
+          </div>
+        </div>
+        ${strengths ? `<div class="card" style="margin-bottom:12px;padding:16px 20px;"><div class="ai-section-title">✅ 優點</div><ul class="ai-list">${strengths}</ul></div>` : ''}
+        ${improvements ? `<div class="card" style="margin-bottom:12px;padding:16px 20px;"><div class="ai-section-title">📝 改善建議</div><ul class="ai-list improve">${improvements}</ul></div>` : ''}
+        ${corrections ? `<div class="card" style="padding:16px 20px;"><div class="ai-section-title">🔧 句子修正</div>${corrections}</div>` : ''}
+      `;
+    }
+
     // Init
     updateTimerDisplay();
     updateWordCount();
     renderHistory();
+    initApiKey();
 
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
   </script>
